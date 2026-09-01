@@ -26,8 +26,9 @@ MoveHit moveAndCollide(Entity& a, const Tilemap& map, float dt, bool passPits) {
                 Rect t{tx * kTileSize, ty * kTileSize, kTileSize, kTileSize};
                 if (!a.bounds().overlaps(t)) continue;
                 hit.hitX = true;
-                if (d.x > 0) a.pos.x = t.x - a.size.x;
-                else if (d.x < 0) a.pos.x = t.right();
+                Rect b = a.bounds();
+                if (d.x > 0) a.pos.x += t.x - b.right();
+                else if (d.x < 0) a.pos.x += t.right() - b.left();
             }
         }
     }
@@ -45,8 +46,9 @@ MoveHit moveAndCollide(Entity& a, const Tilemap& map, float dt, bool passPits) {
                 if (!a.bounds().overlaps(t)) continue;
                 if (tile == Tile::Spike) { hit.hitSpike = true; continue; }
                 if (tile == Tile::Platform) {
-                    if (d.y >= 0 && (a.pos.y + a.size.y - d.y) <= t.y + 4.f) {
-                        a.pos.y = t.y - a.size.y;
+                    Rect b = a.bounds();
+                    if (d.y >= 0 && (b.bottom() - d.y) <= t.y + 4.f) {
+                        a.pos.y += t.y - b.bottom();
                         a.vel.y = 0;
                         a.onGround = true;
                         hit.hitY = true;
@@ -55,13 +57,14 @@ MoveHit moveAndCollide(Entity& a, const Tilemap& map, float dt, bool passPits) {
                     continue;
                 }
                 hit.hitY = true;
+                Rect b = a.bounds();
                 if (d.y > 0) {
-                    a.pos.y = t.y - a.size.y;
+                    a.pos.y += t.y - b.bottom();
                     a.vel.y = 0;
                     a.onGround = true;
                     hit.onGround = true;
                 } else if (d.y < 0) {
-                    a.pos.y = t.bottom();
+                    a.pos.y += t.bottom() - b.top();
                     a.vel.y = 0;
                 }
             }

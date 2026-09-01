@@ -15,11 +15,12 @@ void hitEnemies(Entity& gale, std::vector<Entity>& enemies, Rect box, int dmg, f
 }
 
 Rect strikeBox(const Entity& gale, float reach) {
+    Rect body = gale.bounds();
     Rect box;
     box.w = reach;
-    box.h = gale.size.y;
-    box.y = gale.pos.y;
-    box.x = gale.facingRight ? gale.bounds().right() : gale.pos.x - box.w;
+    box.h = body.h;
+    box.y = body.y;
+    box.x = gale.facingRight ? body.right() : body.x - box.w;
     return box;
 }
 }
@@ -67,8 +68,8 @@ void tickCombat(CombatState& c, Entity& gale, SkillState& skills, const Input& i
 
     // Reach vs jump (see tools/physics.txt):
     //   jumpDist ~ 76.7 px (~4.8 tiles). Strike reach is 32 px (40 Wider) FROM the
-    //   actor AABB edge, so Gale pokes without body-overlap. Enemy contact damage
-    //   still requires THEIR body vs Gale's 10x16 hurtbox.
+    //   visual body AABB edge, so Gale pokes without body-overlap. Enemy contact
+    //   damage still requires THEIR body vs Gale's body.
     if (in.pressed(Action::Attack) && c.attackT <= 0.f && c.dashT <= 0.f) {
         c.attackT = kAttackDuration;
         c.lungeT = 0.10f;
@@ -134,11 +135,12 @@ void tickCombat(CombatState& c, Entity& gale, SkillState& skills, const Input& i
         gale.puppet.pose = PuppetPose::Attack;
         gale.puppet.anim += dt * 8.f;
         // Ring in front and around — does not require body overlap.
+        Rect body = gale.bounds();
         Rect box;
-        box.w = gale.size.x + 48.f;
-        box.h = gale.size.y + 10.f;
-        box.y = gale.pos.y - 4.f;
-        box.x = gale.facingRight ? gale.pos.x - 8.f : gale.pos.x - 40.f;
+        box.w = body.w + 48.f;
+        box.h = body.h + 10.f;
+        box.y = body.y - 4.f;
+        box.x = gale.facingRight ? body.x - 8.f : body.x - 40.f;
         hitEnemies(gale, enemies, box, gale.damage, 80.f, audio);
         c.fxPos = gale.facingRight ? glm::vec2{box.right() - 16.f, gale.pos.y} : glm::vec2{box.x, gale.pos.y};
     }
@@ -155,7 +157,8 @@ void tickCombat(CombatState& c, Entity& gale, SkillState& skills, const Input& i
         gale.vel.x = face * 420.f;
         gale.vel.y = 0.f;
         gale.puppet.pose = PuppetPose::Dash;
-        Rect box{gale.pos.x - 4.f, gale.pos.y, gale.size.x + 8.f, gale.size.y};
+        Rect body = gale.bounds();
+        Rect box{body.x - 4.f, body.y, body.w + 8.f, body.h};
         hitEnemies(gale, enemies, box, gale.damage, 60.f, audio);
     }
 

@@ -49,6 +49,7 @@ private:
     std::string dialogTitle_, dialogBody_;
     float titleBob_ = 0.f;
     bool quit_ = false;
+    bool debugHitbox_ = false;
     glm::vec4 sky_{0.16f, 0.20f, 0.36f, 1};
 };
 

@@ -1,6 +1,7 @@
 #include "Game.hpp"
 #include "Atlas.hpp"
 #include "Collision.hpp"
+#include "Config.hpp"
 #include "Window.hpp"
 #include <algorithm>
 #include <cmath>
@@ -22,8 +23,13 @@ bool Game::init(const std::string& root, Renderer& renderer, Audio& audio) {
     loadSkills(skills_, root + "/config/save.cfg");
     gale_.name = "Gale";
     gale_.kind = EntityKind::Player;
-    gale_.size = {10, 16};
     gale_.puppet.setupGale();
+    gale_.applyPuppetSize();
+    {
+        Config cfg;
+        cfg.load(root + "/config/game.cfg");
+        debugHitbox_ = cfg.getBool("debug_hitbox", false);
+    }
     {
         float mag, coy, dash;
         applyStats(skills_, gale_.maxHp, gale_.damage, mag, coy, dash);
@@ -45,8 +51,10 @@ void Game::spawnFromLevel() {
     enemies_.clear();
     npcs_.clear();
     glm::vec2 spawn{32, 32};
+    gale_.puppet.setupGale();
+    gale_.applyPuppetSize();
     for (auto& m : level_.map.markers()) {
-        glm::vec2 p = standOnFloor(m.tx, m.ty, {10, 16});
+        glm::vec2 p = standOnFloor(m.tx, m.ty, gale_.size);
         if (m.ch == 'P') spawn = p;
         else if (m.ch == 'C') {
             Entity c;
@@ -58,22 +66,22 @@ void Game::spawnFromLevel() {
             Entity e;
             e.kind = EntityKind::Enemy;
             e.brain = (m.ch == '1') ? 1 : 2;
-            e.size = (m.ch == '1') ? glm::vec2{10, 12} : glm::vec2{12, 16};
+            if (m.ch == '1') e.puppet.setupWisp();
+            else e.puppet.setupGolem();
+            e.applyPuppetSize();
             e.pos = standOnFloor(m.tx, m.ty, e.size);
             e.spawn = e.pos;
             e.hp = e.maxHp = (m.ch == '1') ? 2 : 4;
             e.damage = 1;
-            if (m.ch == '1') e.puppet.setupWisp();
-            else e.puppet.setupGolem();
             enemies_.push_back(e);
         } else if (m.ch == 'N') {
             Entity n;
             n.kind = EntityKind::Npc;
             n.brain = 3;
-            n.pos = p;
-            n.size = {12, 16};
-            n.talk = "OPEN THE SKILL TREE WITH C OR TAB";
             n.puppet.setupTrainer();
+            n.applyPuppetSize();
+            n.pos = standOnFloor(m.tx, m.ty, n.size);
+            n.talk = "OPEN THE SKILL TREE WITH C OR TAB";
             npcs_.push_back(n);
         }
     }
@@ -158,6 +166,7 @@ void Game::updatePlay(float dt, const Input& input, Audio& audio) {
     else if (gale_.hurtFlash > 0) gale_.puppet.pose = PuppetPose::Hurt;
     else if (!gale_.onGround) gale_.puppet.pose = PuppetPose::Jump;
     gale_.puppet.tick(dt, moving, gale_.onGround, gale_.facingRight ? 1.f : -1.f);
+    gale_.syncCollisionFromPuppet();
 
     for (auto& c : coins_) {
         if (!c.alive) continue;
@@ -187,6 +196,7 @@ void Game::updatePlay(float dt, const Input& input, Audio& audio) {
             e.puppet.tick(dt, true, false, e.facingRight ? 1.f : -1.f);
             e.puppet.parts[static_cast<int>(PartSlot::Head)].sprite =
                 (static_cast<int>(e.animTime * 6) % 2) ? "wisp1" : "wisp0";
+            e.syncCollisionFromPuppet();
         } else {
             if (e.onGround && std::abs(e.pos.x - gale_.pos.x) < 80.f)
                 e.vel.x = (gale_.pos.x > e.pos.x) ? 28.f : -28.f;
@@ -198,6 +208,7 @@ void Game::updatePlay(float dt, const Input& input, Audio& audio) {
             e.puppet.tick(dt, std::abs(e.vel.x) > 4.f, e.onGround, e.facingRight ? 1.f : -1.f);
             e.puppet.parts[static_cast<int>(PartSlot::FarLeg)].sprite =
                 (static_cast<int>(e.animTime * 5) % 2) ? "golem_legs1" : "golem_legs0";
+            e.syncCollisionFromPuppet();
         }
         if (e.alive && gale_.iTimer <= 0.f && gale_.bounds().overlaps(e.bounds()) && combat_.guardT <= 0.f) {
             hurt(gale_, e.damage, {gale_.facingRight ? -90.f : 90.f, -70.f}, audio);
@@ -356,6 +367,15 @@ void Game::render(Renderer& renderer, Window& window) {
         glm::vec4 gt = gale_.hurtFlash > 0 ? glm::vec4{1, 0.6f, 0.6f, 1} : glm::vec4{1, 1, 1, 1};
         if (gale_.iTimer > 0.f && std::fmod(gale_.iTimer, 0.08f) < 0.04f) gt.a = 0.5f;
         gale_.puppet.draw(renderer, atlas_, gale_.feet(), gt);
+        if (debugHitbox_) {
+            auto drawHb = [&](const Rect& b, const glm::vec4& c) {
+                renderer.drawQuad(b, c);
+            };
+            drawHb(gale_.bounds(), {0.2f, 0.9f, 0.3f, 0.28f});
+            for (auto& e : enemies_)
+                if (e.alive) drawHb(e.bounds(), {0.9f, 0.2f, 0.2f, 0.28f});
+            for (auto& n : npcs_) drawHb(n.bounds(), {0.2f, 0.5f, 0.9f, 0.22f});
+        }
         if (combat_.fxT > 0.f) {
             renderer.drawSprite(atlas_, Rect{combat_.fxPos.x, combat_.fxPos.y, 24, 24}, spriteUV(combat_.fxSprite));
         }

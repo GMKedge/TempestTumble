@@ -75,7 +75,7 @@ tools/check_levels: tools/check_levels.cpp src/Level.cpp src/Tilemap.cpp include
 	$(CXX) $(CXXFLAGS) -o $@ tools/check_levels.cpp src/Level.cpp src/Tilemap.cpp
 
 assets:
-	python3 tools/generate_assets.py
+	python3 tools/slice_gale_sheet.py
 
 clean:
 	rm -f $(OBJ) $(EXE) tempest-tumble.exe tools/check_levels

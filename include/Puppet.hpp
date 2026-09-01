@@ -13,8 +13,8 @@ enum class PartSlot {
     BackArm,
     FarLeg,
     Torso,
-    Head,
     NearLeg,
+    Head,
     FrontArm,
     Weapon,
     Count
@@ -22,16 +22,17 @@ enum class PartSlot {
 
 // Kinematic chain: rest is local offset from parent joint (or hips/feet if parent < 0).
 // extra is pose motion, clamped so |extra| never exceeds maxExtra.
+// Draw dest is top-centered on the resolved joint (same as visualBounds).
 struct BodyPart {
     std::string sprite;
-    glm::vec2 local{0, 0};   // rest offset from parent (y down-positive? y-down: negative is up)
+    glm::vec2 local{0, 0};
     glm::vec2 extra{0, 0};
     float z = 0.f;
     float scaleX = 1.f;
     float scaleY = 1.f;
     float w = 32.f;
     float h = 32.f;
-    int parent = -1;         // PartSlot index, or -1 = hips/feet origin
+    int parent = -1;
     float maxExtra = 8.f;
 };
 
@@ -51,6 +52,8 @@ struct Puppet {
     void setupTrainer();
     void tick(float dt, bool moving, bool onGround, float faceDir);
     void draw(Renderer& r, const Texture& atlas, glm::vec2 feet, const glm::vec4& tint) const;
+    Rect visualBounds(glm::vec2 feet, bool flipX, bool includeWeapon = true) const;
+    glm::vec2 restBodySize() const;
 };
 
 } // namespace tempest

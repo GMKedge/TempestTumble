@@ -16,8 +16,8 @@ Level rules
   Enemy spacing: stand 2+ tiles away so 32 px spear reach hits before body overlap
 
 Combat reach (src/Combat.cpp)
-  Gale hurtbox stays 10x16
-  Tempest Strike hitbox: from AABB edge, 32 px forward (40 with Wider Strike), body height
+  Gale/enemy hurtboxes match on-screen puppet AABB (2px inset), not a 10x16 stub
+  Tempest Strike hitbox: from visual body AABB edge, 32 px forward (40 with Wider Strike), body height
   Active during thrust (anim in [0.10, 0.36) of a 0.44 s attack), re-tested each tick
   Cyclone: ring in front and around; still no body-overlap required
   Enemy contact damage: THEIR body vs Gale body only

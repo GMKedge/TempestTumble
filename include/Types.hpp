@@ -23,7 +23,7 @@ constexpr float kJumpVel = -210.f;
 constexpr float kGravity = 520.f;
 constexpr float kMaxFall = 280.f;
 
-// Tempest Strike: separate reach box in front of the 10x16 body hurtbox.
+// Tempest Strike: separate reach box in front of the visual body AABB.
 constexpr float kStrikeReach = 32.f;
 constexpr float kStrikeReachWide = 40.f;
 constexpr float kAttackDuration = 0.44f;
