@@ -20,15 +20,19 @@ enum class PartSlot {
     Count
 };
 
+// Kinematic chain: rest is local offset from parent joint (or hips/feet if parent < 0).
+// extra is pose motion, clamped so |extra| never exceeds maxExtra.
 struct BodyPart {
     std::string sprite;
-    glm::vec2 local{0, 0};   // from feet origin; y is up-negative in screen? y-down: negative is up
+    glm::vec2 local{0, 0};   // rest offset from parent (y down-positive? y-down: negative is up)
     glm::vec2 extra{0, 0};
     float z = 0.f;
     float scaleX = 1.f;
     float scaleY = 1.f;
-    float w = 16.f;
-    float h = 16.f;
+    float w = 32.f;
+    float h = 32.f;
+    int parent = -1;         // PartSlot index, or -1 = hips/feet origin
+    float maxExtra = 8.f;
 };
 
 enum class PuppetPose { Idle, Walk, Jump, Attack, Dash, Guard, Hurt };

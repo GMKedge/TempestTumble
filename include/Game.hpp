@@ -23,7 +23,7 @@ class Game {
 public:
     bool init(const std::string& root, Renderer& renderer, Audio& audio);
     void update(float dt, const Input& input, Audio& audio);
-    void render(Renderer& renderer, const Window& window);
+    void render(Renderer& renderer, Window& window);
     bool quitRequested() const { return quit_; }
 
 private:

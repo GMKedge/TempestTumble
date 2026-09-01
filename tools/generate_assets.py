@@ -68,6 +68,10 @@ def tnew():
     return Image.new("RGBA", (TILE, TILE), (0, 0, 0, 0))
 
 
+def pnew(w=32, h=32):
+    return Image.new("RGBA", (w, h), (0, 0, 0, 0))
+
+
 def px(im, x, y, color):
     if 0 <= x < im.size[0] and 0 <= y < im.size[1]:
         im.putpixel((x, y), color)
@@ -106,7 +110,9 @@ def paste_cell(img, cx, cy, tile):
 
 def put(img, name, cx, cy, tile):
     paste_cell(img, cx, cy, tile)
-    ATLAS_MAP[name] = (cx, cy)
+    tw = max(1, (tile.size[0] + TILE - 1) // TILE)
+    th = max(1, (tile.size[1] + TILE - 1) // TILE)
+    ATLAS_MAP[name] = (cx, cy, tw, th)
 
 
 def tile_cliff():
@@ -298,158 +304,179 @@ def node_icon(kind):
     return im
 
 
-# --- Gale body parts (multipart puppet) ---
+# --- Gale body parts (32x32 kinematic puppet, high-fantasy pixel art) ---
 def cape(fr):
-    im = tnew()
-    sway = (-1, 0, 1)[fr % 3]
-    fill(im, 4 + sway, 2, 8, 12, C["cloak"])
-    fill(im, 5 + sway, 4, 6, 9, C["cloak2"])
-    fill(im, 6 + sway, 3, 2, 8, C["cloak3"])
-    px(im, 7 + sway, 5, C["gold"])
+    im = pnew()
+    sway = (-2, 0, 2)[fr % 3]
+    fill(im, 8 + sway, 4, 16, 24, C["cloak"])
+    fill(im, 10 + sway, 8, 12, 18, C["cloak2"])
+    fill(im, 12 + sway, 6, 4, 16, C["cloak3"])
+    fill(im, 14 + sway, 10, 2, 6, C["gold"])
+    px(im, 13 + sway, 12, C["storm"])
     outline_opaque(im)
     return im
 
 
 def arm_back(fr):
-    im = tnew()
-    y = 4 + (0 if fr == 0 else 1)
-    fill(im, 5, y, 4, 8, C["steel"])
-    fill(im, 6, y + 7, 3, 3, C["skin"])
-    px(im, 6, y + 1, C["gold"])
+    im = pnew()
+    y = 8 + (0 if fr == 0 else 2)
+    fill(im, 10, y, 8, 16, C["steel"])
+    fill(im, 11, y + 1, 6, 6, C["blue"])
+    fill(im, 12, y + 14, 6, 6, C["skin"])
+    px(im, 13, y + 3, C["gold"])
     outline_opaque(im)
     return im
 
 
 def torso(fr):
-    im = tnew()
-    fill(im, 3, 2, 10, 12, C["steel"])
-    fill(im, 4, 3, 8, 10, C["blue"])
-    fill(im, 5, 4, 6, 3, C["gold"])  # chest plate highlight
-    fill(im, 6, 8, 4, 5, C["steel2"])
+    im = pnew()
+    fill(im, 6, 4, 20, 24, C["steel"])
+    fill(im, 8, 6, 16, 20, C["blue"])
+    fill(im, 10, 8, 12, 6, C["gold"])
+    fill(im, 12, 16, 8, 10, C["steel2"])
+    fill(im, 9, 7, 14, 2, C["cream"])
     if fr:
-        fill(im, 5, 3, 6, 2, C["storm"])
-    px(im, 7, 6, C["white"])
+        fill(im, 10, 6, 12, 4, C["storm"])
+    px(im, 14, 12, C["white"])
+    px(im, 18, 12, C["storm"])
     outline_opaque(im)
     return im
 
 
 def head(fr):
-    im = tnew()
-    fill(im, 4, 4, 8, 8, C["skin"])
-    fill(im, 4, 3, 8, 3, C["hair"])
-    fill(im, 3, 4, 2, 3, C["hair"])  # side lock
-    px(im, 6, 7, C["ink"])
-    px(im, 10, 7, C["ink"])
-    fill(im, 6, 9, 4, 1, C["skin2"])
+    im = pnew()
+    fill(im, 8, 10, 16, 16, C["skin"])
+    fill(im, 8, 6, 16, 8, C["hair"])
+    fill(im, 6, 10, 4, 6, C["hair"])
+    fill(im, 22, 10, 3, 5, C["hair"])
+    fill(im, 7, 6, 18, 5, C["steel"])  # helm brow
+    fill(im, 12, 6, 8, 2, C["gold"])
+    px(im, 12, 16, C["ink"])
+    px(im, 13, 16, C["ink"])
+    px(im, 19, 16, C["ink"])
+    px(im, 20, 16, C["ink"])
+    fill(im, 13, 20, 7, 2, C["skin2"])
     if fr:
-        px(im, 5, 6, C["storm"])  # visor glint
-    fill(im, 3, 2, 10, 2, C["steel"])  # helm brow
-    px(im, 7, 2, C["gold"])
+        fill(im, 10, 14, 12, 2, C["storm"])
     outline_opaque(im)
     return im
 
 
 def arm_front(fr):
-    im = tnew()
-    # 0 idle, 1 swing back, 2 lunge
+    im = pnew()
     if fr == 0:
-        fill(im, 6, 3, 4, 8, C["steel"])
-        fill(im, 7, 10, 3, 3, C["skin"])
-        px(im, 8, 4, C["gold"])
+        fill(im, 12, 6, 8, 16, C["steel"])
+        fill(im, 13, 7, 6, 6, C["blue"])
+        fill(im, 14, 20, 6, 6, C["skin"])
+        px(im, 16, 8, C["gold"])
     elif fr == 1:
-        fill(im, 4, 5, 8, 4, C["steel"])
-        fill(im, 11, 6, 3, 3, C["skin"])
+        fill(im, 6, 12, 16, 8, C["steel"])
+        fill(im, 7, 13, 8, 6, C["blue"])
+        fill(im, 22, 13, 6, 6, C["skin"])
+        px(im, 10, 14, C["gold"])
     else:
-        fill(im, 3, 6, 10, 3, C["steel"])
-        fill(im, 12, 5, 3, 4, C["skin"])
-        fill(im, 1, 5, 4, 2, C["gold"])  # greave glint
+        fill(im, 4, 12, 20, 7, C["steel"])
+        fill(im, 6, 13, 10, 5, C["blue"])
+        fill(im, 24, 11, 6, 8, C["skin"])
+        fill(im, 2, 12, 6, 4, C["gold"])
     outline_opaque(im)
     return im
 
 
 def spear(fr):
-    im = tnew()
-    fill(im, 2, 7, 12, 2, C["steel"])
-    fill(im, 12, 6, 3, 4, C["storm"])
-    fill(im, 1, 6, 3, 4, C["gold2"])
-    if fr:
-        px(im, 14, 7, C["white"])
+    im = pnew(48, 32)
+    fill(im, 4, 14, 36, 4, C["steel"])
+    fill(im, 4, 15, 36, 2, C["steel2"])
+    fill(im, 2, 12, 8, 8, C["gold2"])
+    fill(im, 36, 10, 10, 12, C["storm"])
+    fill(im, 40, 12, 6, 8, C["white"] if fr else C["storm2"])
+    px(im, 44, 15, C["white"])
+    fill(im, 18, 13, 4, 6, C["gold"])
     outline_opaque(im)
     return im
 
 
 def leg(fr, near=True):
-    im = tnew()
-    x = 6 if near else 5
+    im = pnew()
+    x = 12 if near else 10
     if fr == 0:
-        fill(im, x, 2, 4, 10, C["steel2"])
-        fill(im, x - 1, 11, 6, 3, C["gold"])  # runed greaves
-        px(im, x + 1, 12, C["storm"])
+        fill(im, x, 4, 8, 20, C["steel2"])
+        fill(im, x - 2, 22, 12, 6, C["gold"])
+        fill(im, x + 1, 6, 4, 8, C["blue2"])
+        px(im, x + 3, 24, C["storm"])
     elif fr == 1:
-        fill(im, x + 1, 3, 4, 8, C["steel2"])
-        fill(im, x + 2, 10, 5, 4, C["gold"])
-        px(im, x + 3, 11, C["storm"])
-    else:  # tuck
-        fill(im, x, 6, 5, 6, C["steel2"])
-        fill(im, x, 11, 6, 3, C["gold"])
+        fill(im, x + 2, 6, 8, 16, C["steel2"])
+        fill(im, x + 3, 20, 10, 8, C["gold"])
+        fill(im, x + 3, 8, 4, 6, C["blue2"])
+        px(im, x + 6, 22, C["storm"])
+    else:
+        fill(im, x, 12, 10, 12, C["steel2"])
+        fill(im, x, 22, 12, 6, C["gold"])
+        fill(im, x + 2, 14, 6, 6, C["blue2"])
     outline_opaque(im)
     return im
 
 
 def enemy_wisp(fr):
-    im = tnew()
-    fill(im, 4, 4, 8, 8, C["wisp"])
-    fill(im, 5, 5, 6, 6, C["storm"])
-    px(im, 6, 6, C["white"])
-    px(im, 9, 6, C["ink"])
+    im = pnew()
+    fill(im, 8, 8, 16, 16, C["wisp"])
+    fill(im, 10, 10, 12, 12, C["storm"])
+    px(im, 13, 14, C["white"])
+    px(im, 19, 14, C["ink"])
     if fr:
-        fill(im, 3, 3, 10, 2, C["storm2"])
+        fill(im, 6, 6, 20, 4, C["storm2"])
     outline_opaque(im)
     return im
 
 
 def enemy_wisp_glow(fr):
-    im = tnew()
-    fill(im, 6, 6, 4, 4, C["storm"])
+    im = pnew()
+    fill(im, 12, 12, 8, 8, C["storm"])
     if fr:
-        fill(im, 5, 5, 6, 6, C["storm2"])
+        fill(im, 10, 10, 12, 12, C["storm2"])
     return im
 
 
 def enemy_golem_legs(fr):
-    im = tnew()
-    fill(im, 3, 6, 4, 8, C["golem"])
-    fill(im, 9, 6 + (fr % 2), 4, 8, C["golem2"])
+    im = pnew()
+    fill(im, 6, 10, 8, 18, C["golem"])
+    fill(im, 18, 10 + (fr % 2) * 2, 8, 18, C["golem2"])
+    fill(im, 5, 26, 10, 4, C["gold2"])
+    fill(im, 17, 26 + (fr % 2), 10, 4, C["gold2"])
     outline_opaque(im)
     return im
 
 
 def enemy_golem_torso():
-    im = tnew()
-    fill(im, 3, 3, 10, 11, C["golem"])
-    fill(im, 5, 5, 6, 6, C["ruin"])
-    px(im, 7, 7, C["gold"])
+    im = pnew()
+    fill(im, 6, 6, 20, 22, C["golem"])
+    fill(im, 10, 10, 12, 12, C["ruin"])
+    fill(im, 12, 12, 8, 8, C["gold"])
+    px(im, 14, 14, C["storm"])
     outline_opaque(im)
     return im
 
 
 def enemy_golem_head():
-    im = tnew()
-    fill(im, 4, 4, 8, 8, C["golem2"])
-    px(im, 6, 7, C["red"])
-    px(im, 10, 7, C["red"])
-    fill(im, 6, 10, 4, 1, C["ink"])
+    im = pnew()
+    fill(im, 8, 8, 16, 16, C["golem2"])
+    fill(im, 10, 10, 12, 6, C["golem"])
+    px(im, 12, 14, C["red"])
+    px(im, 13, 14, C["red"])
+    px(im, 19, 14, C["red"])
+    fill(im, 12, 20, 8, 2, C["ink"])
     outline_opaque(im)
     return im
 
 
 def npc_trainer():
-    im = tnew()
-    fill(im, 5, 8, 6, 6, C["cloak"])
-    fill(im, 5, 3, 6, 6, C["skin"])
-    fill(im, 4, 2, 8, 3, C["gold"])
-    px(im, 6, 5, C["ink"])
-    px(im, 9, 5, C["ink"])
+    im = pnew()
+    fill(im, 10, 16, 12, 12, C["cloak"])
+    fill(im, 10, 6, 12, 12, C["skin"])
+    fill(im, 8, 4, 16, 6, C["gold"])
+    px(im, 13, 12, C["ink"])
+    px(im, 18, 12, C["ink"])
+    fill(im, 12, 18, 8, 4, C["blue"])
     outline_opaque(im)
     return im
 
@@ -476,6 +503,7 @@ def fx_shield():
     px(im, 8, 7, C["white"])
     outline_opaque(im)
     return im
+
 
 
 GLYPHS = {
@@ -554,18 +582,18 @@ def write_atlas_header(path):
         "    return glm::vec4(float(cx*kTile)/kAtlasW, float(cy*kTile)/kAtlasH,",
         "                     float(tw*kTile)/kAtlasW, float(th*kTile)/kAtlasH);",
         "}",
-        "struct AtlasSprite { const char* name; int cx; int cy; };",
+        "struct AtlasSprite { const char* name; int cx; int cy; int tw; int th; };",
         "inline const AtlasSprite kSprites[] = {",
     ]
-    for name, (cx, cy) in sorted(ATLAS_MAP.items()):
-        lines.append('    {"%s", %d, %d},' % (name, cx, cy))
+    for name, (cx, cy, tw, th) in sorted(ATLAS_MAP.items()):
+        lines.append('    {"%s", %d, %d, %d, %d},' % (name, cx, cy, tw, th))
     lines += [
-        "    {nullptr, 0, 0}",
+        "    {nullptr, 0, 0, 1, 1}",
         "};",
         "inline glm::vec4 spriteUV(const std::string& name) {",
         "    for (int i = 0; kSprites[i].name; ++i) {",
         "        if (name == kSprites[i].name)",
-        "            return atlasUV(kSprites[i].cx, kSprites[i].cy);",
+        "            return atlasUV(kSprites[i].cx, kSprites[i].cy, kSprites[i].tw, kSprites[i].th);",
         "    }",
         "    return atlasUV(0, 0);",
         "}",
@@ -607,39 +635,39 @@ def build_atlas():
         ("node_mob", node_icon("mob")),
         ("node_hp", node_icon("hp")),
         ("node_stat", node_icon("stat")),
-        ("npc_trainer", npc_trainer()),
     ]
     for i, (n, t) in enumerate(tiles):
         put(img, n, i % COLS, i // COLS, t)
 
-    # Gale parts on rows 2-3
+    # Gale 32x32 parts on rows 2-3 (two atlas cells each)
     put(img, "cape0", 0, 2, cape(0))
-    put(img, "cape1", 1, 2, cape(1))
-    put(img, "cape2", 2, 2, cape(2))
-    put(img, "arm_b0", 3, 2, arm_back(0))
-    put(img, "arm_b1", 4, 2, arm_back(1))
-    put(img, "torso0", 5, 2, torso(0))
-    put(img, "torso1", 6, 2, torso(1))
-    put(img, "head0", 7, 2, head(0))
-    put(img, "head1", 8, 2, head(1))
-    put(img, "arm_f0", 9, 2, arm_front(0))
-    put(img, "arm_f1", 10, 2, arm_front(1))
-    put(img, "arm_f2", 11, 2, arm_front(2))
-    put(img, "spear0", 12, 2, spear(0))
-    put(img, "spear1", 13, 2, spear(1))
-    put(img, "leg0", 14, 2, leg(0, True))
-    put(img, "leg1", 15, 2, leg(1, True))
-    put(img, "leg_tuck", 16, 2, leg(2, True))
-    put(img, "leg_far0", 17, 2, leg(0, False))
-    put(img, "leg_far1", 18, 2, leg(1, False))
+    put(img, "cape1", 2, 2, cape(1))
+    put(img, "cape2", 4, 2, cape(2))
+    put(img, "arm_b0", 6, 2, arm_back(0))
+    put(img, "arm_b1", 8, 2, arm_back(1))
+    put(img, "torso0", 10, 2, torso(0))
+    put(img, "torso1", 12, 2, torso(1))
+    put(img, "head0", 14, 2, head(0))
+    put(img, "head1", 16, 2, head(1))
+    put(img, "arm_f0", 18, 2, arm_front(0))
+    put(img, "arm_f1", 20, 2, arm_front(1))
+    put(img, "arm_f2", 22, 2, arm_front(2))
+    put(img, "leg0", 24, 2, leg(0, True))
+    put(img, "leg1", 26, 2, leg(1, True))
+    put(img, "leg_tuck", 28, 2, leg(2, True))
 
-    put(img, "wisp0", 0, 4, enemy_wisp(0))
-    put(img, "wisp1", 1, 4, enemy_wisp(1))
-    put(img, "wisp_glow", 2, 4, enemy_wisp_glow(0))
-    put(img, "golem_legs0", 3, 4, enemy_golem_legs(0))
-    put(img, "golem_legs1", 4, 4, enemy_golem_legs(1))
-    put(img, "golem_torso", 5, 4, enemy_golem_torso())
-    put(img, "golem_head", 6, 4, enemy_golem_head())
+    put(img, "leg_far0", 0, 4, leg(0, False))
+    put(img, "leg_far1", 2, 4, leg(1, False))
+    put(img, "spear0", 4, 4, spear(0))
+    put(img, "spear1", 7, 4, spear(1))
+    put(img, "wisp0", 11, 4, enemy_wisp(0))
+    put(img, "wisp1", 13, 4, enemy_wisp(1))
+    put(img, "wisp_glow", 15, 4, enemy_wisp_glow(0))
+    put(img, "golem_legs0", 17, 4, enemy_golem_legs(0))
+    put(img, "golem_legs1", 19, 4, enemy_golem_legs(1))
+    put(img, "golem_torso", 21, 4, enemy_golem_torso())
+    put(img, "golem_head", 23, 4, enemy_golem_head())
+    put(img, "npc_trainer", 25, 4, npc_trainer())
 
     special = {"/": "slashc", ":": "colon", "+": "plus", "!": "bang", "?": "q", "-": "dash", ".": "dot", " ": "sp"}
     font_chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+/:!?-. "

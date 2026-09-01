@@ -4,17 +4,21 @@ music=storm
 next=win
 sky=0.12,0.16,0.32
 tiles:
-                                                                
-                         |                                      
-                                                                
-              C                              C                  
-                                                                
-         ------                      ------                     
-                                                                
-              1              C                 2                
-                                                                
-P             XX                                    C         D 
-##############XX##########         ################################
-==============  ==========~~~~~~~~~================================
+                                                                                
+                    |                                                           
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+          C                       C                   C                         
+        ------              XX  ------            ------------                  
+ P  N         1         C   XX              2 C                       C     D   
+###################   ################   ###########      ######################
+===================~~~================~~~===========~~~~~~======================
+                                                                                
 end
-npc 3 9 trainer none Spire Voice|Gale Vault leaps the two-tile wall. Dash the wide pit.
+npc 4 12 trainer none Spire Voice|The two-tile wall is a jump. Wide pit has a platform path. Dash is extra.

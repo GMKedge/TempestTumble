@@ -45,7 +45,7 @@ First Jump/Start on the title screen enters **Stormwash Ruins**.
 
 Abilities shove Gale; they are not in-place flashes.
 
-- **Tempest Strike** (J, free): short lunge, hitbox in front, tiny i-frames.
+- **Tempest Strike** (J, free): small lunge, 32px reach box in front of the body (active during the thrust), tiny i-frames.
 - **Cyclone Cleave**: spin that carries Gale sideways while hitting.
 - **Bolt Step** (Shift/L): blink-dash with i-frames; crosses 2–3 tile pits.
 - **Updraft**: extra air burst / double-jump.
@@ -67,8 +67,8 @@ Choices persist in `config/save.cfg`.
 
 ## How the puppet works
 
-Feet/hips are the origin. Each `BodyPart` has a local offset, z-order, sprite frame, and extra animation offset. FlipX mirrors offsets. Draw order is cape → back arm → far leg → torso → head → near leg → front arm → spear. Walk cycles the legs out of phase, arms counter-swing, the cape lags, and the head bobs. Jump tucks the legs. Attack translates the whole body plus the weapon arm.
+Hips/feet are the origin. Torso parents head, both arms, both legs, and the cape. The spear is parented to the front-arm wrist. Each part has a rest local offset and a max extra length (head 2px, arms 6px, legs 8px, cape 10px); pose extras are clamped so limbs stay attached. FlipX mirrors local.x. Walk is a 0.4s two-phase gait. Attack is wind-up then a forward thrust (arm/spear extend, body only a small step). Jump tucks knees toward the hips.
 
 ## Engine notes
 
-OpenGL 3.3 core, GLFW, GLAD, GLM, stb_image, miniaudio. Camera is y-down. Sprite V is **not** inverted: dest top samples atlas v0 (PNG top). Dest rects are pixel-snapped.
+OpenGL 3.3 core, GLFW, GLAD, GLM, stb_image, miniaudio. Camera is y-down, 640x360 world view integer-scaled (letterboxed) to the window. Sprite V is **not** inverted: dest top samples atlas v0 (PNG top). Dest rects are pixel-snapped. Font HUD draws at 2x.

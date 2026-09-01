@@ -12,6 +12,7 @@ public:
     void poll();
     void swap();
     void requestClose();
+    void beginLetterboxed(int logicalW, int logicalH);
     GLFWwindow* handle() const { return handle_; }
     int width() const { return width_; }
     int height() const { return height_; }

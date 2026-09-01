@@ -1,0 +1,23 @@
+Tempest Tumble physics (world pixels, 16 px tiles)
+
+  kViewW/H     640 x 360  (integer scale into the window, letterboxed)
+  kMaxSpeed    95 px/s
+  kJumpVel    -210 px/s
+  kGravity     520 px/s^2
+
+  hangTime   = 2 * 210 / 520 = 0.808 s
+  jumpDist   = 95 * 0.808     = 76.7 px = 4.80 tiles
+  jumpHeight = 210^2 / (2*520)= 42.4 px = 2.65 tiles
+
+Level rules
+  Mandatory pits without Bolt Step: <= 3 tiles  (floor(4.80)-1)
+  Coin platforms: height <= 2 tiles above stance
+  One optional wider pit may require Bolt Step; a platform route keeps the exit clearable
+  Enemy spacing: stand 2+ tiles away so 32 px spear reach hits before body overlap
+
+Combat reach (src/Combat.cpp)
+  Gale hurtbox stays 10x16
+  Tempest Strike hitbox: from AABB edge, 32 px forward (40 with Wider Strike), body height
+  Active during thrust (anim in [0.10, 0.36) of a 0.44 s attack), re-tested each tick
+  Cyclone: ring in front and around; still no body-overlap required
+  Enemy contact damage: THEIR body vs Gale body only

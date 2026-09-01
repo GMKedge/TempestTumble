@@ -13,6 +13,15 @@ void hitEnemies(Entity& gale, std::vector<Entity>& enemies, Rect box, int dmg, f
         hurt(e, dmg, k, audio);
     }
 }
+
+Rect strikeBox(const Entity& gale, float reach) {
+    Rect box;
+    box.w = reach;
+    box.h = gale.size.y;
+    box.y = gale.pos.y;
+    box.x = gale.facingRight ? gale.bounds().right() : gale.pos.x - box.w;
+    return box;
+}
 }
 
 void hurt(Entity& e, int dmg, const glm::vec2& knock, Audio& audio) {
@@ -56,33 +65,38 @@ void tickCombat(CombatState& c, Entity& gale, SkillState& skills, const Input& i
     float face = gale.facingRight ? 1.f : -1.f;
     bool busy = c.dashT > 0.f || c.cycloneT > 0.f || c.lungeT > 0.f;
 
-    // J — Tempest Strike: whole body lunges, tiny i-frames, hitbox in front
+    // Reach vs jump (see tools/physics.txt):
+    //   jumpDist ~ 76.7 px (~4.8 tiles). Strike reach is 32 px (40 Wider) FROM the
+    //   actor AABB edge, so Gale pokes without body-overlap. Enemy contact damage
+    //   still requires THEIR body vs Gale's 10x16 hurtbox.
     if (in.pressed(Action::Attack) && c.attackT <= 0.f && c.dashT <= 0.f) {
-        c.attackT = 0.28f;
-        c.lungeT = 0.12f;
-        gale.vel.x = face * 240.f;
-        gale.iTimer = std::max(gale.iTimer, 0.06f);
+        c.attackT = kAttackDuration;
+        c.lungeT = 0.10f;
+        gale.vel.x = face * 55.f; // ~5 px of body travel, not a tackle
+        gale.iTimer = std::max(gale.iTimer, 0.05f);
         gale.puppet.pose = PuppetPose::Attack;
         gale.puppet.anim = 0.f;
         audio.play("hit");
-        float extra = hasSkill(skills, SkillId::WiderStrike) ? 18.f : 0.f;
-        Rect box;
-        box.w = 18.f + extra;
-        box.h = 16.f;
-        box.y = gale.pos.y;
-        box.x = gale.facingRight ? gale.bounds().right() : gale.pos.x - box.w;
-        hitEnemies(gale, enemies, box, gale.damage, 120.f, audio);
-        c.fxT = 0.12f;
-        c.fxPos = {box.x, box.y};
         c.fxSprite = "slash";
+        c.fxT = kAttackDuration - kAttackRecover;
+    }
+
+    bool strikeActive = c.attackT > 0.f && gale.puppet.anim >= kAttackWindup &&
+                        gale.puppet.anim < (kAttackDuration - kAttackRecover);
+    if (strikeActive) {
+        float reach = hasSkill(skills, SkillId::WiderStrike) ? kStrikeReachWide : kStrikeReach;
+        Rect box = strikeBox(gale, reach);
+        hitEnemies(gale, enemies, box, gale.damage, 120.f, audio);
+        c.fxPos = gale.facingRight ? glm::vec2{box.right() - 16.f, box.y} : glm::vec2{box.x, box.y};
+        c.fxSprite = "slash";
+        if (c.fxT < 0.05f) c.fxT = 0.08f;
     }
 
     if (c.lungeT > 0.f) {
-        gale.vel.x = face * 200.f;
+        gale.vel.x = face * 50.f;
         gale.puppet.pose = PuppetPose::Attack;
     }
 
-    // K — equipped skill (must move Gale)
     if (in.pressed(Action::Ability) && !busy) {
         SkillId k = skills.equippedK;
         if (k == SkillId::CycloneCleave && hasSkill(skills, k)) {
@@ -119,12 +133,16 @@ void tickCombat(CombatState& c, Entity& gale, SkillState& skills, const Input& i
         gale.vel.x = face * 150.f;
         gale.puppet.pose = PuppetPose::Attack;
         gale.puppet.anim += dt * 8.f;
-        Rect box{gale.pos.x - 8.f, gale.pos.y - 4.f, gale.size.x + 16.f, gale.size.y + 8.f};
+        // Ring in front and around — does not require body overlap.
+        Rect box;
+        box.w = gale.size.x + 48.f;
+        box.h = gale.size.y + 10.f;
+        box.y = gale.pos.y - 4.f;
+        box.x = gale.facingRight ? gale.pos.x - 8.f : gale.pos.x - 40.f;
         hitEnemies(gale, enemies, box, gale.damage, 80.f, audio);
-        c.fxPos = gale.pos;
+        c.fxPos = gale.facingRight ? glm::vec2{box.right() - 16.f, gale.pos.y} : glm::vec2{box.x, gale.pos.y};
     }
 
-    // Shift/L — Bolt Step
     if (in.pressed(Action::Dash) && hasSkill(skills, SkillId::BoltStep) && c.dashT <= 0.f) {
         c.dashT = dashDur;
         gale.vel.x = face * 420.f;

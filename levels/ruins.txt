@@ -4,17 +4,21 @@ music=storm
 next=keep
 sky=0.16,0.22,0.40
 tiles:
-                                                                
-          |                          f                          
-                                                                
-                    ------                                      
-                                                                
-         C                     C          C                     
-                                                                
-    ------                 ------                               
-                                                                
-P     N      C     1              2                 C         D 
-######    ##########         #############     #################
-======~~~~==========~~~~~~~~~=============~~~~~=================
+                                                                                
+                        |                                                       
+                                                            f                   
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                      --------------                            
+                  C               C           C                                 
+              ------            -------------------                             
+ P   N         1      C          2                      C     C             D   
+########   ##############   #############       ################################
+========~~~==============~~~=============~~~~~~~================================
+                                                                                
 end
-npc 6 9 trainer none Sky Tutor|Spend points in the skill tree. C or Tab. Bolt Step crosses pits.
+npc 5 12 trainer none Sky Tutor|Spend points in the skill tree. C or Tab. Bolt Step is optional here.

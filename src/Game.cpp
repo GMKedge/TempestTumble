@@ -29,7 +29,7 @@ bool Game::init(const std::string& root, Renderer& renderer, Audio& audio) {
         applyStats(skills_, gale_.maxHp, gale_.damage, mag, coy, dash);
         gale_.hp = gale_.maxHp;
     }
-    camera_.setViewportPixels(320.f, 180.f);
+    camera_.setViewportPixels(kViewW, kViewH);
     audio.playMusic("storm", 0.4f);
     return true;
 }
@@ -110,24 +110,25 @@ void Game::updatePlay(float dt, const Input& input, Audio& audio) {
     float mag, coy, dashDur;
     applyStats(skills_, gale_.maxHp, gale_.damage, mag, coy, dashDur);
 
+    // kMaxSpeed=95, kJumpVel=-210, kGravity=520 -> hang 0.808s, jumpDist 76.7px (4.8 tiles), height 42.4px (2.65 tiles).
     glm::vec2 axis = input.moveAxis();
     bool dashing = combat_.dashT > 0.f;
     bool lunging = combat_.lungeT > 0.f || combat_.cycloneT > 0.f;
     if (!dashing && !lunging) {
         if (axis.x < 0) gale_.facingRight = false;
         if (axis.x > 0) gale_.facingRight = true;
-        gale_.vel.x = axis.x * 88.f;
+        gale_.vel.x = axis.x * kMaxSpeed;
     }
     bool canJump = gale_.onGround || combat_.coyote > 0.f;
     if (input.pressed(Action::Jump) && canJump && combat_.dashT <= 0.f) {
-        gale_.vel.y = -252.f;
+        gale_.vel.y = kJumpVel;
         gale_.onGround = false;
         combat_.coyote = 0.f;
         audio.play("jump");
         gale_.puppet.pose = PuppetPose::Jump;
     }
-    if (!dashing) gale_.vel.y += 900.f * dt;
-    if (gale_.vel.y > 320.f) gale_.vel.y = 320.f;
+    if (!dashing) gale_.vel.y += kGravity * dt;
+    if (gale_.vel.y > kMaxFall) gale_.vel.y = kMaxFall;
 
     tickCombat(combat_, gale_, skills_, input, level_.map, enemies_, audio, dt);
     bool pass = combat_.dashT > 0.f;
@@ -191,7 +192,7 @@ void Game::updatePlay(float dt, const Input& input, Audio& audio) {
                 e.vel.x = (gale_.pos.x > e.pos.x) ? 28.f : -28.f;
             else
                 e.vel.x = std::sin(e.animTime * 0.8f) * 22.f;
-            e.vel.y += 900.f * dt;
+            e.vel.y += kGravity * dt;
             e.facingRight = e.vel.x >= 0;
             moveAndCollide(e, level_.map, dt, false);
             e.puppet.tick(dt, std::abs(e.vel.x) > 4.f, e.onGround, e.facingRight ? 1.f : -1.f);
@@ -297,31 +298,27 @@ void Game::update(float dt, const Input& input, Audio& audio) {
     }
 }
 
-void Game::render(Renderer& renderer, const Window& window) {
-    float aspect = window.framebufferHeight() ? float(window.framebufferWidth()) / float(window.framebufferHeight()) : 16.f / 9.f;
-    float vh = 180.f;
-    float vw = vh * aspect;
-    if (mode_ == Mode::Play || (mode_ == Mode::Pause && !level_.id.empty()) || mode_ == Mode::Dialog)
-        camera_.setViewportPixels(vw, vh);
-    else {
-        camera_.setViewportPixels(320.f, 180.f);
-        camera_.setWorldBounds(320.f, 180.f);
-        camera_.snapTo({160, 90});
+void Game::render(Renderer& renderer, Window& window) {
+    window.beginLetterboxed(int(kViewW), int(kViewH));
+    camera_.setViewportPixels(kViewW, kViewH);
+    if (!(mode_ == Mode::Play || (mode_ == Mode::Pause && !level_.id.empty()) || mode_ == Mode::Dialog)) {
+        camera_.setWorldBounds(kViewW, kViewH);
+        camera_.snapTo({kViewW * 0.5f, kViewH * 0.5f});
     }
     glm::vec4 clear = sky_;
     renderer.begin(camera_, clear);
 
     if (mode_ == Mode::Title) {
         renderer.drawSprite(atlas_, Rect{0, 0, 4, 4}, spriteUV("whitepx"));
-        for (int i = 0; i < 8; ++i) {
-            float y = i * 24.f;
+        for (int i = 0; i < 12; ++i) {
+            float y = i * 32.f;
             glm::vec4 c{sky_.r + i * 0.03f, sky_.g + i * 0.02f, sky_.b + 0.05f, 1};
-            renderer.drawQuad(Rect{0, y, 400, 24}, c);
+            renderer.drawQuad(Rect{0, y, kViewW + 40.f, 32}, c);
         }
-        drawTitle(renderer, atlas_, menu_, std::sin(titleBob_ * 2.f) * 2.f);
+        drawTitle(renderer, atlas_, menu_, std::sin(titleBob_ * 2.f) * 3.f);
         gale_.puppet.setupGale();
         gale_.puppet.tick(0.016f, false, true, 1.f);
-        gale_.puppet.draw(renderer, atlas_, {220, 140}, {1, 1, 1, 1});
+        gale_.puppet.draw(renderer, atlas_, {480.f, 280.f}, {1, 1, 1, 1});
         renderer.end();
         return;
     }
@@ -336,7 +333,7 @@ void Game::render(Renderer& renderer, const Window& window) {
         renderer.drawSprite(atlas_, Rect{0, 0, 1, 1}, spriteUV("whitepx"));
         for (int i = 0; i < 6; ++i) {
             glm::vec4 c{sky_.r + i * 0.04f, sky_.g + i * 0.03f, sky_.b + i * 0.02f, 1};
-            renderer.drawQuad(Rect{cam.x, cam.y + i * 30.f, camera_.viewWidth() + 8, 32}, c);
+            renderer.drawQuad(Rect{cam.x, cam.y + i * 60.f, camera_.viewWidth() + 8, 64}, c);
         }
         for (int ty = ty0; ty < ty1; ++ty) {
             for (int tx = tx0; tx < tx1; ++tx) {
@@ -360,38 +357,38 @@ void Game::render(Renderer& renderer, const Window& window) {
         if (gale_.iTimer > 0.f && std::fmod(gale_.iTimer, 0.08f) < 0.04f) gt.a = 0.5f;
         gale_.puppet.draw(renderer, atlas_, gale_.feet(), gt);
         if (combat_.fxT > 0.f) {
-            renderer.drawSprite(atlas_, Rect{combat_.fxPos.x, combat_.fxPos.y, 16, 16}, spriteUV(combat_.fxSprite));
+            renderer.drawSprite(atlas_, Rect{combat_.fxPos.x, combat_.fxPos.y, 24, 24}, spriteUV(combat_.fxSprite));
         }
 
         glm::vec2 hud = camera_.position();
         for (int i = 0; i < gale_.maxHp; ++i) {
-            renderer.drawSprite(atlas_, Rect{hud.x + 6 + i * 14, hud.y + 6, 16, 16},
+            renderer.drawSprite(atlas_, Rect{hud.x + 10 + i * 22, hud.y + 8, 24, 24},
                                 spriteUV(i < gale_.hp ? "heart" : "heart_empty"));
         }
-        renderer.drawText(atlas_, "LV" + std::to_string(skills_.level), {hud.x + 6, hud.y + 22}, 0.8f);
+        renderer.drawText(atlas_, "LV" + std::to_string(skills_.level), {hud.x + 10, hud.y + 36}, 2.f);
         if (messageTimer_ > 0.f)
-            renderer.drawText(atlas_, message_, {hud.x + 20, hud.y + 40}, 0.8f, {1, 0.95f, 0.4f, 1});
+            renderer.drawText(atlas_, message_, {hud.x + 24, hud.y + 68}, 2.f, {1, 0.95f, 0.4f, 1});
     }
 
     if (mode_ == Mode::Pause) {
         glm::vec2 o = camera_.position();
-        if (level_.id.empty()) o = {40, 10};
+        if (level_.id.empty()) o = {80, 20};
         if (menu_.tab == MenuTab::Sheet)
-            drawCharacterSheet(renderer, atlas_, skills_, gale_.hp, gale_.maxHp, o.x + 40, o.y + 16);
+            drawCharacterSheet(renderer, atlas_, skills_, gale_.hp, gale_.maxHp, o.x + 80, o.y + 28);
         else
-            drawSkillTree(renderer, atlas_, skills_, o.x + 30, o.y + 8);
-        renderer.drawText(atlas_, "LEFT/RIGHT TAB   C/ESC BACK", {o.x + 20, o.y + 168}, 0.7f);
+            drawSkillTree(renderer, atlas_, skills_, o.x + 60, o.y + 16);
+        renderer.drawText(atlas_, "LEFT/RIGHT TAB   C/ESC BACK", {o.x + 40, o.y + 330}, 2.f);
     }
     if (mode_ == Mode::Dialog) {
         glm::vec2 o = camera_.position();
-        renderer.drawQuad(Rect{o.x + 20, o.y + 120, 280, 50}, {0.07f, 0.08f, 0.14f, 0.92f});
-        renderer.drawText(atlas_, dialogTitle_, {o.x + 28, o.y + 124}, 0.9f, {1, 0.9f, 0.5f, 1});
-        renderer.drawText(atlas_, dialogBody_, {o.x + 28, o.y + 140}, 0.8f);
+        renderer.drawQuad(Rect{o.x + 40, o.y + 250, 560, 90}, {0.07f, 0.08f, 0.14f, 0.92f});
+        renderer.drawText(atlas_, dialogTitle_, {o.x + 52, o.y + 258}, 2.f, {1, 0.9f, 0.5f, 1});
+        renderer.drawText(atlas_, dialogBody_, {o.x + 52, o.y + 290}, 2.f);
     }
     if (mode_ == Mode::Victory)
-        renderer.drawText(atlas_, "THE RUINS FALL QUIET", {40, 80}, 1.f, {1, 0.95f, 0.5f, 1});
+        renderer.drawText(atlas_, "THE RUINS FALL QUIET", {80, 160}, 2.f, {1, 0.95f, 0.5f, 1});
     if (mode_ == Mode::Defeat)
-        renderer.drawText(atlas_, "GALE FALLS  JUMP TO TITLE", {30, 80}, 1.f, {1, 0.5f, 0.5f, 1});
+        renderer.drawText(atlas_, "GALE FALLS  JUMP TO TITLE", {60, 160}, 2.f, {1, 0.5f, 0.5f, 1});
 
     renderer.end();
 }

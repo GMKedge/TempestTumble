@@ -17,7 +17,7 @@ public:
 
 private:
     glm::vec2 pos_{0, 0};
-    float viewW_ = 320.f, viewH_ = 180.f;
+    float viewW_ = 640.f, viewH_ = 360.f;
     float worldW_ = 1000.f, worldH_ = 320.f;
 };
 
