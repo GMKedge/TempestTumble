@@ -1,0 +1,8 @@
+tempest-tumble
+tempest-tumble.exe
+*.o
+*.obj
+.DS_Store
+build/
+tools/check_levels
+config/save.cfg

@@ -1,0 +1,20 @@
+id=keep
+name=Galekeep Spire
+music=storm
+next=win
+sky=0.12,0.16,0.32
+tiles:
+                                                                
+                         |                                      
+                                                                
+              C                              C                  
+                                                                
+         ------                      ------                     
+                                                                
+              1              C                 2                
+                                                                
+P             XX                                    C         D 
+##############XX##########         ################################
+==============  ==========~~~~~~~~~================================
+end
+npc 3 9 trainer none Spire Voice|Gale Vault leaps the two-tile wall. Dash the wide pit.

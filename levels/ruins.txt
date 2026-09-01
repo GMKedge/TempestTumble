@@ -1,0 +1,20 @@
+id=ruins
+name=Stormwash Ruins
+music=storm
+next=keep
+sky=0.16,0.22,0.40
+tiles:
+                                                                
+          |                          f                          
+                                                                
+                    ------                                      
+                                                                
+         C                     C          C                     
+                                                                
+    ------                 ------                               
+                                                                
+P     N      C     1              2                 C         D 
+######    ##########         #############     #################
+======~~~~==========~~~~~~~~~=============~~~~~=================
+end
+npc 6 9 trainer none Sky Tutor|Spend points in the skill tree. C or Tab. Bolt Step crosses pits.
