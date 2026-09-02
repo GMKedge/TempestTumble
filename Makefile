@@ -8,7 +8,7 @@
 
 CXX      ?= g++
 CXXFLAGS ?= -std=c++17 -O2 -Wall -Wextra
-CXXFLAGS += -Iinclude -Ithird_party/glad/include -Ithird_party/glm -Ithird_party/stb -Ithird_party/miniaudio
+CXXFLAGS += -Iinclude -Ithird_party/glad/include -Ithird_party/glm -Ithird_party/stb -Ithird_party/miniaudio -Ithird_party/tsf
 CXXFLAGS += -Ithird_party/glm/glm -Ithird_party/glm
 
 SRC = \

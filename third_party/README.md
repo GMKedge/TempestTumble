@@ -7,7 +7,8 @@ Kids: these folders are other people's code that we *use*, not code we wrote.
 | `glad/` | Loads OpenGL 3.3 function pointers | compiled (`glad.c`) |
 | `glm/` | Vector / matrix math (header-only) | `#include` |
 | `stb/` | `stb_image.h` loads PNG files | one `.cpp` defines the implementation |
-| `miniaudio/` | Plays WAV files | one `.cpp` defines the implementation |
+| `miniaudio/` | Plays WAV SFX and hosts the audio callback | one `.cpp` defines the implementation |
+| `tsf/` | TinySoundFont + TinyMidiLoader (MIDI + SF2) | header-only, implemented in `src/Audio.cpp` |
 
 ## GLFW (window + input)
 

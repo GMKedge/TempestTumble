@@ -1,15 +1,19 @@
 #pragma once
+#include <memory>
 #include <string>
-#include <unordered_map>
-
-struct ma_engine;
-struct ma_sound;
 
 namespace tempest {
 
+struct AudioImpl;
+
 class Audio {
 public:
-    bool init();
+    Audio();
+    ~Audio();
+    Audio(const Audio&) = delete;
+    Audio& operator=(const Audio&) = delete;
+
+    bool init(const std::string& root);
     void destroy();
     void loadSfx(const std::string& name, const std::string& path);
     void loadMusic(const std::string& name, const std::string& path);
@@ -18,11 +22,7 @@ public:
     void stopMusic();
 
 private:
-    ma_engine* engine_ = nullptr;
-    std::unordered_map<std::string, std::string> sfxPath_;
-    std::unordered_map<std::string, std::string> musicPath_;
-    ma_sound* music_ = nullptr;
-    std::string musicName_;
+    std::unique_ptr<AudioImpl> impl_;
 };
 
 } // namespace tempest

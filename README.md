@@ -72,3 +72,14 @@ Hips/feet are the origin. Torso parents head, both arms, both legs, and the cape
 ## Engine notes
 
 OpenGL 3.3 core, GLFW, GLAD, GLM, stb_image, miniaudio. Camera is y-down, 640x360 world view integer-scaled (letterboxed) to the window. Sprite V is **not** inverted: dest top samples atlas v0 (PNG top). Dest rects are pixel-snapped. Font HUD draws at 2x.
+
+## Music (MIDI + SoundFont)
+
+In-game music is Standard MIDI (`.mid`) rendered at runtime with TinySoundFont
+and a GM bank at `assets/music/gm.sf2` (see `assets/music/LICENSE.txt`). The
+audio callback (or miniaudio data source) dispatches due MIDI events, then
+`tsf_render` fills the buffer; SFX stay WAV. To swap a cue, drop in another
+`.mid` (GM program numbers) with the same filename — `storm.mid`, `keep.mid`,
+`title.mid` — or point `Game.cpp` `loadMusic` at a new path. Rebuild is not
+required for a replaced `.mid`/`.sf2`. If the SoundFont or a MIDI file is
+missing, the game logs it and continues silent for music.

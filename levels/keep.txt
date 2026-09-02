@@ -1,6 +1,6 @@
 id=keep
 name=Galekeep Spire
-music=storm
+music=keep
 next=win
 sky=0.12,0.16,0.32
 tiles:

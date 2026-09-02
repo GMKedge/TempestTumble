@@ -6,3 +6,5 @@ tempest-tumble.exe
 build/
 tools/check_levels
 config/save.cfg
+__pycache__/
+tools/__pycache__/

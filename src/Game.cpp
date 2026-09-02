@@ -19,7 +19,9 @@ bool Game::init(const std::string& root, Renderer& renderer, Audio& audio) {
     audio.loadSfx("levelup", root + "/assets/sfx/levelup.wav");
     audio.loadSfx("select", root + "/assets/sfx/select.wav");
     audio.loadSfx("coin", root + "/assets/sfx/coin.wav");
-    audio.loadMusic("storm", root + "/assets/music/storm.wav");
+    audio.loadMusic("storm", root + "/assets/music/storm.mid");
+    audio.loadMusic("keep", root + "/assets/music/keep.mid");
+    audio.loadMusic("title", root + "/assets/music/title.mid");
     loadSkills(skills_, root + "/config/save.cfg");
     gale_.name = "Gale";
     gale_.kind = EntityKind::Player;
@@ -36,7 +38,7 @@ bool Game::init(const std::string& root, Renderer& renderer, Audio& audio) {
         gale_.hp = gale_.maxHp;
     }
     camera_.setViewportPixels(kViewW, kViewH);
-    audio.playMusic("storm", 0.4f);
+    audio.playMusic("title", 0.4f);
     return true;
 }
 

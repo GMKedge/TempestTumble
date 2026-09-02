@@ -13,7 +13,7 @@ bool Application::init(const std::string& root) {
     if (!window_.create(w, h, "Tempest Tumble", vsync)) return false;
     input_.init(window_.handle(), config_);
     if (!renderer_.init(root + "/shaders")) return false;
-    if (!audio_.init()) return false;
+    if (!audio_.init(root)) return false;
     if (!game_.init(root, renderer_, audio_)) return false;
     std::cout << "Tempest Tumble is awake. Esc opens the menu.\n";
     return true;
